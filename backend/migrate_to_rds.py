@@ -10,7 +10,7 @@ SOURCE_DB = "postgresql://postgres:postgres@localhost:5432/transparencia"
 # Target database (AWS RDS)
 # Format: postgresql://username:password@host:port/database
 # You need to provide the username, password, and database name
-TARGET_DB = "postgresql://admin:cacaseca000@database-1.cb2682icmjpq.us-east-2.rds.amazonaws.com:5432/database-1"
+TARGET_DB = "postgresql://postgres:cacaseca000@database-1.cb2682icmjpq.us-east-2.rds.amazonaws.com:5432/database-1"
 
 def migrate_data():
     """Migrate data from local DB to AWS RDS"""
