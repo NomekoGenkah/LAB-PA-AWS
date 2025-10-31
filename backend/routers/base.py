@@ -20,3 +20,11 @@ def get_meta():
 def get_random_number():
     number = random.randint(1, 10)
     return {"number": number}
+
+@router.get("/api/v1/test")
+def test_connection():
+    return {
+        "status": "success",
+        "message": "Backend is working!",
+        "server": "Transparencia Ciudadana API"
+    }
