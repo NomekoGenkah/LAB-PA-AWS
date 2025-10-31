@@ -1,5 +1,5 @@
-
 import './App.css'
+import HomePage from './pages/HomePage'
 
 function App() {
 
@@ -23,6 +23,7 @@ function App() {
         <p>Acesse os contratos firmados pelo governo.</p>
       </div>
     </div>
+    <HomePage />
 
 
     </>
