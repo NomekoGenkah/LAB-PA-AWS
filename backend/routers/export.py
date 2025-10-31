@@ -5,7 +5,7 @@ from io import StringIO
 
 router = APIRouter(prefix="/api/v1/export", tags=["export"])
 
-DATABASE_URL = "postgresql://admin:cacaseca000@database-1.cb2682icmjpq.us-east-2.rds.amazonaws.com:5432/database-1"
+DATABASE_URL = "postgresql://postgres:cacaseca000@database-1.cb2682icmjpq.us-east-2.rds.amazonaws.com:5432/postgres"
 
 @router.get("/")
 def export_data():
