@@ -5,7 +5,7 @@ from io import StringIO
 
 router = APIRouter(prefix="/api/v1/export", tags=["export"])
 
-DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/transparencia"
+DATABASE_URL = "postgresql://admin:cacaseca000@database-1.cb2682icmjpq.us-east-2.rds.amazonaws.com:5432/database-1"
 
 @router.get("/")
 def export_data():
@@ -31,7 +31,7 @@ def export_data():
     # Get CSV content
     csv_content = output.getvalue()
     output.close()
-        
+
     return Response(
         content=csv_content,
         media_type="text/csv",
