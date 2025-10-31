@@ -63,6 +63,9 @@ def load_csv_to_rds():
         conn.commit()
         print("✓ Table created successfully!")
     
+    # Keep only the first 21 columns (ignore extra empty columns)
+    df = df.iloc[:, :21]
+    
     # Rename columns to match database schema
     column_mapping = {
         df.columns[0]: 'anio',
