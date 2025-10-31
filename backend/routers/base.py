@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+import random
 
 router = APIRouter(prefix="", tags=["base"])
 
@@ -14,3 +15,8 @@ def get_meta():
         "rows": 1043,
         "columns": ["Año", "Mes", "Nombre", "Cargo", "Región", "Remuneración"]
     }
+
+@router.get("/api/v1/random")
+def get_random_number():
+    number = random.randint(1, 10)
+    return {"number": number}
