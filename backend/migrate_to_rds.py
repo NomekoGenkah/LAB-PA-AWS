@@ -1,29 +1,39 @@
 """
-Migration script to copy data from local PostgreSQL to AWS RDS
+Migration script to load Data.csv directly to AWS RDS
 """
 from sqlalchemy import create_engine, text
+import pandas as pd
+import os
 import sys
 
-# Source database (local PostgreSQL)
-SOURCE_DB = "postgresql://postgres:postgres@localhost:5432/transparencia"
-
 # Target database (AWS RDS)
-# Format: postgresql://username:password@host:port/database
-# You need to provide the username, password, and database name
-TARGET_DB = "postgresql://postgres:cacaseca000@database-1.cb2682icmjpq.us-east-2.rds.amazonaws.com:5432/database-1"
+TARGET_DB = "postgresql://postgres:cacaseca000@database-1.cb2682icmjpq.us-east-2.rds.amazonaws.com:5432/postgres"
 
-def migrate_data():
-    """Migrate data from local DB to AWS RDS"""
+def load_csv_to_rds():
+    """Load Data.csv directly to AWS RDS"""
     
-    print("Connecting to source database (local)...")
-    source_engine = create_engine(SOURCE_DB)
+    # Get CSV file path
+    csv_path = os.path.join(os.path.dirname(__file__), "Data.csv")
     
-    print("Connecting to target database (AWS RDS)...")
-    target_engine = create_engine(TARGET_DB)
+    if not os.path.exists(csv_path):
+        print(f"❌ Error: Data.csv not found at {csv_path}")
+        sys.exit(1)
+    
+    print("Reading CSV file...")
+    # Read CSV with semicolon delimiter
+    df = pd.read_csv(csv_path, delimiter=';', encoding='latin-1')
+    
+    # Clean column names
+    df.columns = df.columns.str.strip().str.replace('"', '')
+    
+    print(f"Found {len(df)} rows in CSV")
+    
+    print("\nConnecting to AWS RDS database...")
+    engine = create_engine(TARGET_DB)
     
     # Create table in target database
-    print("Creating table in target database...")
-    with target_engine.connect() as conn:
+    print("Creating table in RDS...")
+    with engine.connect() as conn:
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS spending (
                 id SERIAL PRIMARY KEY,
@@ -51,90 +61,64 @@ def migrate_data():
             )
         """))
         conn.commit()
-        print("Table created successfully!")
+        print("✓ Table created successfully!")
     
-    # Read data from source
-    print("Reading data from source database...")
-    with source_engine.connect() as conn:
-        result = conn.execute(text("SELECT * FROM spending"))
-        rows = result.fetchall()
-        column_names = result.keys()
-        print(f"Found {len(rows)} rows to migrate")
+    # Rename columns to match database schema
+    column_mapping = {
+        df.columns[0]: 'anio',
+        df.columns[1]: 'mes',
+        df.columns[2]: 'estamento',
+        df.columns[3]: 'nombre_completo',
+        df.columns[4]: 'cargo',
+        df.columns[5]: 'grado',
+        df.columns[6]: 'calificacion',
+        df.columns[7]: 'region',
+        df.columns[8]: 'asignaciones_especiales',
+        df.columns[9]: 'remuneracion_bruta',
+        df.columns[10]: 'remuneracion_liquida',
+        df.columns[11]: 'rem_adicionales',
+        df.columns[12]: 'rem_bonos',
+        df.columns[13]: 'derecho_horas_extra',
+        df.columns[14]: 'horas_extra_diurnas',
+        df.columns[15]: 'horas_extra_nocturnas',
+        df.columns[16]: 'horas_extra_festivas',
+        df.columns[17]: 'fecha_inicio',
+        df.columns[18]: 'fecha_termino',
+        df.columns[19]: 'observaciones',
+        df.columns[20]: 'viaticos'
+    }
     
-    # Insert data into target
-    print("Inserting data into target database...")
-    with target_engine.connect() as conn:
-        for i, row in enumerate(rows, 1):
-            conn.execute(text("""
-                INSERT INTO spending (
-                    anio, mes, estamento, nombre_completo, cargo, grado, calificacion, region,
-                    asignaciones_especiales, remuneracion_bruta, remuneracion_liquida,
-                    rem_adicionales, rem_bonos, derecho_horas_extra, horas_extra_diurnas,
-                    horas_extra_nocturnas, horas_extra_festivas, fecha_inicio, fecha_termino,
-                    observaciones, viaticos
-                ) VALUES (
-                    :anio, :mes, :estamento, :nombre_completo, :cargo, :grado, :calificacion, :region,
-                    :asignaciones_especiales, :remuneracion_bruta, :remuneracion_liquida,
-                    :rem_adicionales, :rem_bonos, :derecho_horas_extra, :horas_extra_diurnas,
-                    :horas_extra_nocturnas, :horas_extra_festivas, :fecha_inicio, :fecha_termino,
-                    :observaciones, :viaticos
-                )
-            """), {
-                'anio': row[1],
-                'mes': row[2],
-                'estamento': row[3],
-                'nombre_completo': row[4],
-                'cargo': row[5],
-                'grado': row[6],
-                'calificacion': row[7],
-                'region': row[8],
-                'asignaciones_especiales': row[9],
-                'remuneracion_bruta': row[10],
-                'remuneracion_liquida': row[11],
-                'rem_adicionales': row[12],
-                'rem_bonos': row[13],
-                'derecho_horas_extra': row[14],
-                'horas_extra_diurnas': row[15],
-                'horas_extra_nocturnas': row[16],
-                'horas_extra_festivas': row[17],
-                'fecha_inicio': row[18],
-                'fecha_termino': row[19],
-                'observaciones': row[20],
-                'viaticos': row[21]
-            })
-            
-            if i % 50 == 0:
-                print(f"Migrated {i}/{len(rows)} rows...")
-        
-        conn.commit()
+    df.rename(columns=column_mapping, inplace=True)
     
-    print(f"\n✓ Migration completed! {len(rows)} rows migrated successfully.")
+    # Load data using pandas to_sql
+    print("Loading data into RDS...")
+    df.to_sql('spending', engine, if_exists='append', index=False)
+    
+    print(f"\n✓ Successfully loaded {len(df)} rows into AWS RDS!")
     
     # Verify data
-    print("\nVerifying data in target database...")
-    with target_engine.connect() as conn:
+    print("\nVerifying data in RDS...")
+    with engine.connect() as conn:
         result = conn.execute(text("SELECT COUNT(*) FROM spending"))
         count = result.scalar()
-        print(f"Target database now has {count} rows")
+        print(f"✓ RDS database now has {count} rows")
 
 if __name__ == "__main__":
     print("="*60)
-    print("PostgreSQL to AWS RDS Migration Script")
+    print("CSV to AWS RDS Migration Script")
     print("="*60)
     print()
-    print("IMPORTANT: Update TARGET_DB with your RDS credentials:")
-    print("  - Username (default: admin)")
-    print("  - Password (replace YOUR_PASSWORD)")
-    print("  - Database name (default: transparencia)")
+    print("RDS Host: database-1.cb2682icmjpq.us-east-2.rds.amazonaws.com")
+    print("Database: postgres")
     print()
     
-    response = input("Have you updated the credentials? (yes/no): ")
-    if response.lower() != 'yes':
-        print("Please update the TARGET_DB variable in the script first.")
-        sys.exit(1)
-    
     try:
-        migrate_data()
+        load_csv_to_rds()
+        print("\n" + "="*60)
+        print("✓ Migration completed successfully!")
+        print("="*60)
     except Exception as e:
         print(f"\n❌ Error during migration: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
