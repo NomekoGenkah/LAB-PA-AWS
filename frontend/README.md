@@ -1,75 +1,56 @@
-# React + TypeScript + Vite
+# Frontend - Hierarchical To-Do App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación React + Vite + TypeScript para gestionar tareas jerárquicas (tareas y sub-tareas recursivas).
 
-Currently, two official plugins are available:
+## Páginas
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- `Home`: Estado del backend y navegación.
+- `Task List`: Lista de tareas raíz y creación de nuevas tareas.
+- `Task Detail`: Vista detalle de una tarea con todas sus sub-tareas.
 
-## React Compiler
+## Componentes Clave
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- `components/TaskTree.tsx`: Render recursivo de una tarea y sus sub-tareas.
+- `store/tasks.ts`: Estado global con Zustand (lista de tareas raíz y tarea seleccionada).
+- `api/tasks.ts`: Cliente de API (axios) para CRUD y obtención recursiva.
 
-Note: This will impact Vite dev & build performances.
+## Variables de Entorno
 
-## Expanding the ESLint configuration
+Crear `.env` basado en `.env.example`:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+VITE_API_URL=http://localhost:8000
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Comandos
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```powershell
+cd frontend
+npm install
+npm run dev      # Vite dev server con HMR
+npm run build    # tsc -b && vite build
+npm run preview  # servir build en :5173
 ```
+
+## Docker (producción)
+
+Construir y correr con una URL de API específica:
+
+```powershell
+cd frontend
+docker build -t todo-frontend --build-arg VITE_API_URL=http://localhost:8000 .
+docker run -d -p 5173:5173 --name todo-frontend todo-frontend
+```
+
+En Docker Compose, se usa `VITE_API_URL=http://backend:8000` para comunicar con el servicio backend.
+
+## Arquitectura rápida
+
+- Router con `react-router-dom` para rutas `/`, `/tasks`, `/tasks/:id`.
+- Estado global con Zustand para tareas.
+- `TaskTree` renderiza la jerarquía de forma recursiva.
+
+## Notas
+
+- Para ver sub-tareas recién creadas o eliminar, refresca la vista (boilerplate inicial; se puede mejorar con invalidación/refresh automático).
+- Por defecto, CORS está abierto en el backend durante desarrollo.

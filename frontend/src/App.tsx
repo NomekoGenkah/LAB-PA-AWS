@@ -1,34 +1,29 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import Home from './pages/Home'
+import TaskList from './pages/TaskList'
+import TaskDetail from './pages/TaskDetail'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <BrowserRouter>
+      <div style={{ padding: '1rem', maxWidth: 960, margin: '0 auto' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1>Hierarchical To-Do App</h1>
+          <nav style={{ display: 'flex', gap: '1rem' }}>
+            <Link to="/">Home</Link>
+            <Link to="/tasks">Task List</Link>
+          </nav>
+        </header>
+        <main style={{ marginTop: '1rem' }}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/tasks" element={<TaskList />} />
+            <Route path="/tasks/:id" element={<TaskDetail />} />
+          </Routes>
+        </main>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </BrowserRouter>
   )
 }
 
